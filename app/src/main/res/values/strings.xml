@@ -18,4 +18,6 @@
     <string name="font_sample">The quick brown fox jumps over the lazy dog.</string>
     <string name="input_hints">Please enter something&#8230;</string>
 
+    <string name="sensor_unit_deg">&#176;</string>
+
 </resources>
