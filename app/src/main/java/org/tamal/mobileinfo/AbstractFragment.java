@@ -15,13 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractFragment extends Fragment {
 
+    static final String ROOT = "https://developer.android.com/reference/";
     final int id = View.generateViewId();
     private ViewGroup viewGroup;
 
@@ -54,7 +53,16 @@ public abstract class AbstractFragment extends Fragment {
     }
 
     TextView addHeader(Class<?> cls) {
-        String url = Utils.getURL(cls);
+        while (cls.getComponentType() != null) {
+            cls = cls.getComponentType();
+        }
+        if (cls.isPrimitive() || cls.isAssignableFrom(Number.class) || cls == String.class) {
+            return null;
+        }
+        String url = cls.getCanonicalName();
+        if (url != null) {
+            url = ROOT + url.replace('.', '/') + ".html";
+        }
         return addHeader(cls.getSimpleName(), url);
     }
 
@@ -66,20 +74,12 @@ public abstract class AbstractFragment extends Fragment {
         return textView;
     }
 
-    List<TextView[]> addKeyValues(Set<KeyValue> keyValues) {
-        List<TextView[]> list = new ArrayList<>(keyValues.size());
-        for (KeyValue keyValue : keyValues) {
-            list.add(addKeyValue(keyValue.key, keyValue.kUrl, keyValue.value, keyValue.vUrl));
+    Map<String, TextView> addKeyValues(Map<String, ?> map) {
+        Map<String, TextView> textViewMap = new HashMap<>();
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            textViewMap.put(entry.getKey(), addKeyValue(entry.getKey(), entry.getValue())[1]);
         }
-        return list;
-    }
-
-    List<TextView[]> addKeyValues(Map<?, ?> map) {
-        List<TextView[]> list = new ArrayList<>(map.size());
-        for (Map.Entry<?, ?> entry : map.entrySet()) {
-            list.add(addKeyValue(entry.getKey(), entry.getValue()));
-        }
-        return list;
+        return textViewMap;
     }
 
     TextView[] addKeyValue(Object key, Object value) {

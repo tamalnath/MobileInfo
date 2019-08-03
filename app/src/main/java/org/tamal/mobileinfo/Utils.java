@@ -11,22 +11,20 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class Utils {
 
     private static final String TAG = "Utils";
-    static final String ROOT = "https://developer.android.com/reference/";
 
     private Utils() {
     }
 
-    static Set<KeyValue> findConstants(Class<?> classType, @Nullable Class<?> fieldType, @Nullable String regex) {
-        Set<KeyValue> set = new TreeSet<>();
+    @SuppressWarnings("unchecked")
+    static <T> Map<String, T> findConstants(Class<?> classType, @Nullable Class<T> fieldType, @Nullable String regex) {
+        Map<String, T> map = new TreeMap<>();
         Pattern pattern = regex == null ? null : Pattern.compile(regex);
         for (Field field : classType.getDeclaredFields()) {
             boolean isPublic = Modifier.isPublic(field.getModifiers());
@@ -48,18 +46,13 @@ final class Utils {
                     name = matcher.group(1);
                 }
             }
-            KeyValue keyValue = new KeyValue();
-            keyValue.key = name;
-            keyValue.kUrl = getURL(field);
             try {
-                keyValue.value = field.get(null);
+                map.put(name, (T) field.get(null));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
-            keyValue.vUrl = getURL(field.getType());
-            set.add(keyValue);
         }
-        return set;
+        return map;
     }
 
     static String findConstant(Class<?> classType, Object value, String regex) {
@@ -228,42 +221,20 @@ final class Utils {
         return String.valueOf(obj);
     }
 
-    private static String getURL(Field field) {
-        return getURL(field.getDeclaringClass()) + "#" + field.getName();
-    }
-
-    private static String getURL(Method method) {
-        return getURL(method.getDeclaringClass()) + "#" + method.getName() + "()";
-    }
-
-    static String getURL(Class<?> cls) {
-        while (cls.getComponentType() != null) {
-            cls = cls.getComponentType();
-        }
-        if (cls.isPrimitive() || cls.isAssignableFrom(Number.class) || cls == String.class) {
-            return null;
-        }
-        String url = cls.getCanonicalName();
-        if (url != null) {
-            url = ROOT + url.replace('.', '/') + ".html";
-        }
-        return url;
-    }
-
     static void expand(Map<String, Object> map, String key, Class<?> classType, String regex) {
         Object value = map.get(key);
         if (value == null) {
             return;
         }
         if (value.getClass().isArray()) {
-            Set<KeyValue> CONST = findConstants(classType, value.getClass().getComponentType(), regex);
+            Map<String, ?> CONST = findConstants(classType, value.getClass().getComponentType(), regex);
             int length = Array.getLength(value);
             String[] array = new String[length];
             for (int i = 0; i < length; i++) {
                 Object item = Array.get(value, i);
-                for (KeyValue entry : CONST) {
-                    if (entry.value.equals(item)) {
-                        array[i] = entry.key;
+                for (Map.Entry<String, ?> entry : CONST.entrySet()) {
+                    if (entry.getValue().equals(item)) {
+                        array[i] = entry.getKey();
                         break;
                     }
                 }
@@ -276,5 +247,4 @@ final class Utils {
             }
         }
     }
-
 }

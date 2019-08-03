@@ -23,17 +23,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Properties;
+import java.util.TreeMap;
 
 public class HomeFragment extends AbstractFragment {
 
-    private static final String P_URL = Utils.ROOT + "android/Manifest.permission.html#";
-    private static final String PERM_URL = Utils.ROOT + "android/content/pm/PackageManager.html#PERMISSION_";
     private static final String GRANTED = "GRANTED";
     private static final String DENIED = "DENIED";
     private boolean requested;
     private int REQUEST_CODE;
     private Map<String, TextView> permissionMap = new HashMap<>();
+    private Map<String, TextView> configMap;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -49,8 +49,20 @@ public class HomeFragment extends AbstractFragment {
         return view;
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Map<String, Object> map = getConfiguration(newConfig);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            TextView textView = configMap.get(entry.getKey());
+            if (textView != null) {
+                textView.setText(Utils.toString(entry.getValue(), "\n", "", "", null));
+            }
+        }
+    }
+
     private void requestPermissions(Activity activity) {
-        addHeader("Permissions", Utils.ROOT + "android/content/pm/PackageInfo.html#requestedPermissions");
+        addHeader("Permissions", ROOT + "android/content/pm/PackageInfo.html#requestedPermissions");
         String[] permissions;
         try {
             permissions = activity.getPackageManager()
@@ -70,7 +82,7 @@ public class HomeFragment extends AbstractFragment {
             }
             String[] split = permission.split("\\.");
             permission = split[split.length - 1];
-            TextView[] kv = addKeyValue(permission, P_URL + permission, grant, PERM_URL + grant);
+            TextView[] kv = addKeyValue(permission, grant);
             permissionMap.put(permission, kv[1]);
         }
         if (!(deniedPermissions.isEmpty() || requested)) {
@@ -97,7 +109,10 @@ public class HomeFragment extends AbstractFragment {
                 grant = DENIED;
                 deniedPermissions.add(permission);
             }
-            setText(permissionMap.get(permission), grant, PERM_URL + grant);
+            TextView textView = permissionMap.get(permission);
+            if (textView != null) {
+                textView.setText(grant);
+            }
         }
         String message = getString(R.string.permission_denied, Utils.toString(deniedPermissions, ", ", null, null, null));
         Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
@@ -111,20 +126,19 @@ public class HomeFragment extends AbstractFragment {
         if (batteryStatus == null) {
             return;
         }
-        String url = Utils.getURL(BatteryManager.class) + "#";
         boolean present = batteryStatus.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false);
-        addKeyValue("Battery Present", url + "EXTRA_PRESENT", present, null);
+        addKeyValue("Battery Present", present);
         if (!present) {
             return;
         }
 
         int key = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         String value = Utils.findConstant(BatteryManager.class, key, "BATTERY_STATUS_(.*)");
-        addKeyValue("Battery Status", url + "EXTRA_STATUS", value, url + "BATTERY_STATUS_" + value);
+        addKeyValue("Battery Status", value);
 
         key = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
         value = Utils.findConstant(BatteryManager.class, key, "BATTERY_HEALTH_(.*)");
-        addKeyValue("Battery Health", url + "EXTRA_HEALTH", value, url + "BATTERY_HEALTH_" + value);
+        addKeyValue("Battery Health", value);
 
         value = getString(R.string.unknown);
         key = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -133,32 +147,39 @@ public class HomeFragment extends AbstractFragment {
         } else if (key == 0) {
             value = "Unplugged";
         }
-        addKeyValue("Battery Plugged", url + "EXTRA_PLUGGED", value, url + "BATTERY_PLUGGED_" + value);
+        addKeyValue("Battery Plugged", value);
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int percent = 100 * level / scale;
-        addKeyValue("Battery Charge", url + "EXTRA_LEVEL", percent, null);
+        addKeyValue("Battery Charge", percent);
 
         int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-        addKeyValue("Battery Voltage", url + "EXTRA_PLUGGED", (voltage / 1000f) + "V", null);
+        addKeyValue("Battery Voltage", (voltage / 1000f) + "V");
 
         float temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) / 10f;
-        addKeyValue("Battery Temperature", url + "EXTRA_TEMPERATURE", temperature + getString(R.string.sensor_unit_deg), null);
+        addKeyValue("Battery Temperature", temperature + getString(R.string.sensor_unit_deg));
 
         value = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-        addKeyValue("Battery Technology", url + "EXTRA_TECHNOLOGY", value, null);
+        addKeyValue("Battery Technology", value);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             boolean low = batteryStatus.getBooleanExtra(BatteryManager.EXTRA_BATTERY_LOW, false);
-            addKeyValue("Battery Low", url + "EXTRA_BATTERY_LOW", low, null);
+            addKeyValue("Battery Low", low);
         }
 
     }
 
     private void addResourceDetails() {
         Resources resources = getResources();
-        Configuration configuration = resources.getConfiguration();
+        Map<String, Object> map = getConfiguration(resources.getConfiguration());
+        addHeader(Configuration.class);
+        configMap = addKeyValues(map);
+        addHeader(DisplayMetrics.class);
+        addKeyValues(Utils.findFields(resources.getDisplayMetrics()));
+    }
+
+    private Map<String, Object> getConfiguration(Configuration configuration) {
         Map<String, Object> map = Utils.findFields(configuration);
         map.putAll(Utils.findProperties(configuration));
         Utils.expand(map, "LayoutDirection", View.class, "LAYOUT_DIRECTION_(.*)");
@@ -183,26 +204,28 @@ public class HomeFragment extends AbstractFragment {
         map.put("UI Mode Type", value);
         value = Utils.findConstant(Configuration.class, uiMode & Configuration.UI_MODE_NIGHT_MASK, "UI_MODE_NIGHT_(.*)");
         map.put("UI Mode Night", value);
-
-        addHeader(Configuration.class);
-        addKeyValues(map);
-        addHeader(DisplayMetrics.class);
-        addKeyValues(Utils.findFields(resources.getDisplayMetrics()));
+        return map;
     }
+
     private void addStaticData() {
         addHeader(Build.class);
-        Set<KeyValue> build = Utils.findConstants(Build.class, null, null);
+        Map<String, Object> build = Utils.findConstants(Build.class, null, null);
         addKeyValues(build);
         addHeader(Build.VERSION.class);
-        Set<KeyValue> VERSION = Utils.findConstants(Build.VERSION.class, null, null);
+        Map<String, Object> VERSION = Utils.findConstants(Build.VERSION.class, null, null);
         addKeyValues(VERSION);
         String versionCode = Utils.findConstant(Build.VERSION_CODES.class, Build.VERSION.SDK_INT, null);
         addKeyValue("Version Code", versionCode);
 
-        addHeader("Environment Variables", Utils.ROOT + "java/lang/System.html#getenv()");
+        addHeader("Environment Variables", ROOT + "java/lang/System.html#getenv()");
         addKeyValues(System.getenv());
-        addHeader("System Properties", Utils.ROOT + "java/lang/System.html#getProperties()");
-        addKeyValues(System.getProperties());
+        addHeader("System Properties", ROOT + "java/lang/System.html#getProperties()");
+        Properties properties = System.getProperties();
+        Map<String, String> map = new TreeMap<>();
+        for (String property : properties.stringPropertyNames()) {
+            map.put(property, properties.getProperty(property));
+        }
+        addKeyValues(map);
     }
 
     @Override
