@@ -24,21 +24,6 @@ public abstract class AbstractFragment extends Fragment {
     final int id = View.generateViewId();
     private ViewGroup viewGroup;
 
-    static void setText(TextView textView, String text, String url) {
-        if (url == null) {
-            textView.setText(text);
-        } else {
-            textView.setClickable(true);
-            textView.setMovementMethod(LinkMovementMethod.getInstance());
-            String hyperlink = String.format("<a href='%s'>%s</a>", url, text);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                textView.setText(Html.fromHtml(hyperlink, Html.FROM_HTML_MODE_COMPACT));
-            } else {
-                textView.setText(Html.fromHtml(hyperlink));
-            }
-        }
-    }
-
     @StringRes
     abstract int getTitle();
 
@@ -69,7 +54,18 @@ public abstract class AbstractFragment extends Fragment {
     TextView addHeader(String header, String url) {
         TextView textView = (TextView) getLayoutInflater().inflate(R.layout.view_header, viewGroup, false);
         textView.setTypeface(Typeface.DEFAULT_BOLD);
-        setText(textView, header, url);
+        if (url == null) {
+            textView.setText(header);
+        } else {
+            textView.setClickable(true);
+            textView.setMovementMethod(LinkMovementMethod.getInstance());
+            String hyperlink = String.format("<a href='%s'>%s</a>", url, header);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                textView.setText(Html.fromHtml(hyperlink, Html.FROM_HTML_MODE_COMPACT));
+            } else {
+                textView.setText(Html.fromHtml(hyperlink));
+            }
+        }
         viewGroup.addView(textView);
         return textView;
     }
@@ -77,22 +73,28 @@ public abstract class AbstractFragment extends Fragment {
     Map<String, TextView> addKeyValues(Map<String, ?> map) {
         Map<String, TextView> textViewMap = new HashMap<>();
         for (Map.Entry<String, ?> entry : map.entrySet()) {
-            textViewMap.put(entry.getKey(), addKeyValue(entry.getKey(), entry.getValue())[1]);
+            textViewMap.put(entry.getKey(), addKeyValue(entry.getKey(), entry.getValue()));
         }
         return textViewMap;
     }
 
-    TextView[] addKeyValue(Object key, Object value) {
-        return addKeyValue(key, null, value, null);
+    void updateKeyValues(Map<String, ?> map, Map<String, TextView> viewMap) {
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            TextView textView = viewMap.get(entry.getKey());
+            if (textView != null) {
+                textView.setText(Utils.toString(entry.getValue(), "\n", "", "", null));
+            }
+        }
     }
 
-    TextView[] addKeyValue(Object key, String kURL, Object value, String vURL) {
+    TextView addKeyValue(String key, Object value) {
         View view = getLayoutInflater().inflate(R.layout.view_key_value, viewGroup, false);
-        TextView[] textViews = {view.findViewById(R.id.key), view.findViewById(R.id.value)};
-        setText(textViews[0], Utils.toString(key), kURL);
-        setText(textViews[1], Utils.toString(value, "\n", "", "", null), vURL);
+        TextView keyView = view.findViewById(R.id.key);
+        TextView valueView = view.findViewById(R.id.value);
+        keyView.setText(key);
+        valueView.setText(Utils.toString(value, "\n", "", "", null));
         viewGroup.addView(view);
-        return textViews;
+        return valueView;
     }
 
 }

@@ -82,7 +82,7 @@ final class Utils {
                 throw new RuntimeException(e);
             }
         }
-        return null;
+        return "";
     }
 
     static Map<String, Object> findProperties(Object object) {

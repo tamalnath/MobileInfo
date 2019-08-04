@@ -1,6 +1,7 @@
 package org.tamal.mobileinfo;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -10,6 +11,7 @@ import android.content.res.Resources;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +22,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -32,7 +33,8 @@ public class HomeFragment extends AbstractFragment {
     private static final String DENIED = "DENIED";
     private boolean requested;
     private int REQUEST_CODE;
-    private Map<String, TextView> permissionMap = new HashMap<>();
+    private Map<String, TextView> permissionMap;
+    private Map<String, TextView> batteryMap;
     private Map<String, TextView> configMap;
 
     @Override
@@ -53,12 +55,7 @@ public class HomeFragment extends AbstractFragment {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         Map<String, Object> map = getConfiguration(newConfig);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            TextView textView = configMap.get(entry.getKey());
-            if (textView != null) {
-                textView.setText(Utils.toString(entry.getValue(), "\n", "", "", null));
-            }
-        }
+        updateKeyValues(map, configMap);
     }
 
     private void requestPermissions(Activity activity) {
@@ -73,6 +70,7 @@ public class HomeFragment extends AbstractFragment {
             return;
         }
         List<String> deniedPermissions = new ArrayList<>();
+        Map<String, String> map = new TreeMap<>();
         for (String permission : permissions) {
             int p = activity.checkSelfPermission(permission);
             String grant = GRANTED;
@@ -82,9 +80,9 @@ public class HomeFragment extends AbstractFragment {
             }
             String[] split = permission.split("\\.");
             permission = split[split.length - 1];
-            TextView[] kv = addKeyValue(permission, grant);
-            permissionMap.put(permission, kv[1]);
+            map.put(permission, grant);
         }
+        permissionMap = addKeyValues(map);
         if (!(deniedPermissions.isEmpty() || requested)) {
             String[] denied = deniedPermissions.toArray(new String[0]);
             REQUEST_CODE = this.getId() & 0xFFFF;
@@ -121,53 +119,72 @@ public class HomeFragment extends AbstractFragment {
     private void addBatteryStatus(Context context) {
         addHeader(BatteryManager.class);
 
+        Map<String, Object> map = fetchBatteryStatus(context);
+        batteryMap = addKeyValues(map);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_BATTERY_LOW);
+        intentFilter.addAction(Intent.ACTION_BATTERY_OKAY);
+        intentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+        intentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Map<String, Object> map = fetchBatteryStatus(context);
+                updateKeyValues(map, batteryMap);
+            }
+        }, intentFilter);
+    }
+
+    private Map<String, Object> fetchBatteryStatus(Context context) {
+        Map<String, Object> map = new ArrayMap<>();
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, intentFilter);
         if (batteryStatus == null) {
-            return;
+            return map;
         }
         boolean present = batteryStatus.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false);
-        addKeyValue("Battery Present", present);
+        map.put("Battery Present", present);
         if (!present) {
-            return;
+            return map;
         }
 
         int key = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         String value = Utils.findConstant(BatteryManager.class, key, "BATTERY_STATUS_(.*)");
-        addKeyValue("Battery Status", value);
+        map.put("Battery Status", value);
 
         key = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
         value = Utils.findConstant(BatteryManager.class, key, "BATTERY_HEALTH_(.*)");
-        addKeyValue("Battery Health", value);
+        map.put("Battery Health", value);
 
-        value = getString(R.string.unknown);
+         value = getString(R.string.unknown);
         key = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         if (key > 0) {
             value = Utils.findConstant(BatteryManager.class, key, "BATTERY_PLUGGED_(.*)");
         } else if (key == 0) {
             value = "Unplugged";
         }
-        addKeyValue("Battery Plugged", value);
+        map.put("Battery Plugged", value);
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int percent = 100 * level / scale;
-        addKeyValue("Battery Charge", percent);
+        map.put("Battery Charge", percent);
 
         int voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-        addKeyValue("Battery Voltage", (voltage / 1000f) + "V");
+        map.put("Battery Voltage", (voltage / 1000f) + "V");
 
         float temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) / 10f;
-        addKeyValue("Battery Temperature", temperature + getString(R.string.sensor_unit_deg));
+        map.put("Battery Temperature", temperature + getString(R.string.sensor_unit_deg));
 
         value = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-        addKeyValue("Battery Technology", value);
+        map.put("Battery Technology", value);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             boolean low = batteryStatus.getBooleanExtra(BatteryManager.EXTRA_BATTERY_LOW, false);
-            addKeyValue("Battery Low", low);
+            map.put("Battery Low", low);
         }
-
+        return map;
     }
 
     private void addResourceDetails() {
@@ -204,6 +221,13 @@ public class HomeFragment extends AbstractFragment {
         map.put("UI Mode Type", value);
         value = Utils.findConstant(Configuration.class, uiMode & Configuration.UI_MODE_NIGHT_MASK, "UI_MODE_NIGHT_(.*)");
         map.put("UI Mode Night", value);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int colorMode = (int) map.remove("colorMode");
+            value = Utils.findConstant(Configuration.class, colorMode & Configuration.COLOR_MODE_HDR_MASK, "COLOR_MODE_HDR_(.*)");
+            map.put("Color Mode HDR", value);
+            value = Utils.findConstant(Configuration.class, colorMode & Configuration.COLOR_MODE_WIDE_COLOR_GAMUT_MASK, "COLOR_MODE_WIDE_COLOR_GAMUT_(.*)");
+            map.put("Color Mode Wide Color Gamut", value);
+        }
         return map;
     }
 
