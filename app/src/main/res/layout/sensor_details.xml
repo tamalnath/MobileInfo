@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/default_margin">
+
+        <TextView
+            android:text="@string/sensor_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_id_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_id" />
+
+        <TextView
+            android:text="@string/sensor_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_type_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_type" />
+
+        <TextView
+            android:text="@string/sensor_vendor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_vendor_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_vendor" />
+
+        <TextView
+            android:text="@string/sensor_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_version_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_version" />
+
+        <TextView
+            android:text="@string/sensor_power"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_power_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_power" />
+
+        <TextView
+            android:text="@string/sensor_delay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_delay_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_delay" />
+
+        <TextView
+            android:text="@string/sensor_resolution"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_resolution_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_resolution" />
+
+        <TextView
+            android:text="@string/sensor_max_range"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_max_range_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_max_range" />
+
+        <TextView
+            android:text="@string/sensor_reserved_event"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_reserved_event_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_reserved_event" />
+
+        <TextView
+            android:text="@string/sensor_max_event"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_max_event_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_max_event" />
+
+        <TextView
+            android:text="@string/sensor_direct_report_rate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_direct_report_rate_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_direct_report_rate" />
+
+        <TextView
+            android:text="@string/sensor_reporting_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_reporting_mode_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_reporting_mode" />
+
+        <TextView
+            android:text="@string/sensor_dynamic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_dynamic_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_dynamic" />
+
+        <TextView
+            android:text="@string/sensor_wake_up"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_wake_up_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_wake_up" />
+
+        <TextView
+            android:text="@string/sensor_additional_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_additional_info_label"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:text="@string/loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sensor_additional_info" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

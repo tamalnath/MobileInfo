@@ -18,6 +18,41 @@
     <string name="font_sample">The quick brown fox jumps over the lazy dog.</string>
     <string name="input_hints">Please enter something&#8230;</string>
 
+    <string name="sensor_unit_ms2">m/s&#178;</string>
+    <string name="sensor_unit_ut">&#181;T</string>
+    <string name="sensor_unit_rad">rad/s</string>
     <string name="sensor_unit_deg">&#176;</string>
+    <string name="sensor_unit_lx">lux</string>
+    <string name="sensor_unit_cm">cm</string>
+    <string name="sensor_unit_pascal">hPa</string>
+    <string name="sensor_unit_percent">%</string>
+    <string name="sensor_unit_centigrade">&#176;C</string>
+    <string name="sensor_unit_step">steps</string>
+    <string name="sensor_value_unit">%1$+.2f %2$s</string>
+    <string name="sensor_values_xyz_unit">x=%1$+.2f%4$s, y=%2$+.2f%4$s, z=%3$+.2f%4$s</string>
+    <string name="sensor_values_gyroscope_uncalibrated">Rotation: x=%1$+.2f, y=%2$+.2f, z=%3$+.2f rad/s\nDrift: x=%4$+.2f, y=%5$+.2f, z=%6$+.2f rad/s</string>
+    <string name="sensor_values_rotation">sin(&#952;/2)*(x, y, z)=(%1$+.2f, %2$+.2f, %3$+.2f), cos(&#952;/2)=%4$+.2f</string>
+    <string name="sensor_no_values">Event triggered at: %1$tH:%1$tM:%1$tS</string>
+    <string name="sensor_value_near">near</string>
+    <string name="sensor_value_far">far</string>
+    <string name="sensor_id">ID</string>
+    <string name="sensor_type">Type</string>
+    <string name="sensor_vendor">Vendor</string>
+    <string name="sensor_version">Version</string>
+    <string name="sensor_power">Power</string>
+    <string name="sensor_power_unit">%1$f mA</string>
+    <string name="sensor_delay">Delay</string>
+    <string name="sensor_delay_unit">Min: %1$d ms, Max: %2$d ms</string>
+    <string name="sensor_resolution">Resolution</string>
+    <string name="sensor_resolution_unit">%1$f %2$s</string>
+    <string name="sensor_max_range">Maximum Range</string>
+    <string name="sensor_reserved_event">Reserved Events</string>
+    <string name="sensor_max_event">Maximum Events</string>
+    <string name="sensor_event_unit">%1$d/sec</string>
+    <string name="sensor_direct_report_rate">Direct Report Rate</string>
+    <string name="sensor_reporting_mode">Reporting Mode</string>
+    <string name="sensor_dynamic">Is Dynamic</string>
+    <string name="sensor_wake_up">Is Wake Up</string>
+    <string name="sensor_additional_info">Additional Information</string>
 
 </resources>
