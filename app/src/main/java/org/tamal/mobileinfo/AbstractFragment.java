@@ -22,7 +22,7 @@ public abstract class AbstractFragment extends Fragment {
 
     static final String ROOT = "https://developer.android.com/reference/";
     final int id = View.generateViewId();
-    private ViewGroup viewGroup;
+    ViewGroup viewGroup;
 
     @StringRes
     abstract int getTitle();
