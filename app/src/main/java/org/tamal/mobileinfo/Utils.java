@@ -94,9 +94,29 @@ final class Utils {
         if (object == null) {
             return map;
         }
-        Pattern pattern;
-        pattern = Pattern.compile(regex);
-        for (Method method : object.getClass().getMethods()) {
+        Map<String, Method> methodMap = findProperties(object.getClass(), regex);
+        for (Map.Entry<String, Method> entry : methodMap.entrySet()) {
+            Method method = entry.getValue();
+            try {
+                Object value = method.invoke(object);
+                map.put(entry.getKey(), value);
+            } catch (IllegalAccessException e) {
+                Log.d(TAG, "Method: " + method + " Error: " + e.toString() + " Cause: " + e.getCause());
+            } catch (InvocationTargetException e) {
+                Log.e(TAG, "Method: " + method + " Error: " + e.toString() + " Cause: " + e.getCause());
+            }
+        }
+        return map;
+    }
+
+    static Map<String, Method> findProperties(Class<?> cls) {
+        return findProperties(cls, "^(?:is|get)(.*)$");
+    }
+
+    static Map<String, Method> findProperties(Class<?> cls, String regex) {
+        Map<String, Method> map = new TreeMap<>();
+        Pattern pattern = regex == null ? null : Pattern.compile(regex);
+        for (Method method : cls.getMethods()) {
             boolean isPublic = Modifier.isPublic(method.getModifiers());
             boolean isStatic = Modifier.isStatic(method.getModifiers());
             if (!isPublic || isStatic || method.getParameterTypes().length != 0
@@ -104,21 +124,16 @@ final class Utils {
                 continue;
             }
             String name = method.getName();
-            Matcher matcher = pattern.matcher(name);
-            if (!matcher.find()) {
-                continue;
+            if (pattern != null) {
+                Matcher matcher = pattern.matcher(name);
+                if (!matcher.find()) {
+                    continue;
+                }
+                if (matcher.groupCount() == 1) {
+                    name = matcher.group(1);
+                }
             }
-            if (matcher.groupCount() == 1) {
-                name = matcher.group(1);
-            }
-            try {
-                Object value = method.invoke(object);
-                map.put(name, value);
-            } catch (IllegalAccessException e) {
-                Log.d(TAG, "Method: " + method + " Error: " + e.toString() + " Cause: " + e.getCause());
-            } catch (InvocationTargetException e) {
-                Log.e(TAG, "Method: " + method + " Error: " + e.toString() + " Cause: " + e.getCause());
-            }
+            map.put(name, method);
         }
         return map;
     }

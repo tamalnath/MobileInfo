@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity
     private AbstractFragment[] fragments = {
             new HomeFragment(),
             new FontsFragment(),
+            new NetworkFragment(),
             new SensorsFragment(),
     };
 

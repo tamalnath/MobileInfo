@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class SensorsFragment extends AbstractFragment implements SensorEventListener {
 
-    private static final int DELAY_MILLIS = 100;
+    private static final int DELAY_MILLIS = 500;
     private static final Map<String, Float> GRAVITY = Utils.findConstants(SensorManager.class, float.class, "GRAVITY_(.+)");
     private static final Map<String, Float> LIGHT = Utils.findConstants(SensorManager.class, float.class, "LIGHT_(.+)");
 
@@ -41,23 +41,6 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
     private TriggerListener triggerListener = new TriggerListener();
     private Map<Sensor, Long> sensorUpdateMap = new HashMap<>();
     private Map<Sensor, TextView> sensorValuesMap = new HashMap<>();
-
-    private static String findNearest(Map<String, Float> map, float value) {
-        float absValue = Math.abs(value);
-        String name = null;
-        float minDelta = Float.MAX_VALUE;
-        for (Map.Entry<String, Float> entry : map.entrySet()) {
-            float delta = Math.abs(entry.getValue() - absValue);
-            if (delta < minDelta) {
-                minDelta = delta;
-                name = entry.getKey();
-            }
-        }
-        if (name == null) {
-            return null;
-        }
-        return name;
-    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -75,6 +58,7 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
             }
         });
         ViewGroup layout = rootView.findViewById(R.id.id_linear_layout);
+        ViewGroup sensorDetails = (ViewGroup) inflater.inflate(R.layout.sensor_details, viewGroup, false);
         for (Sensor sensor : sensors) {
             LinearLayout linearLayout = new LinearLayout(getContext());
             linearLayout.setOrientation(LinearLayout.VERTICAL);
@@ -84,7 +68,7 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
             linearLayout.addView(sensorNameView);
             TextView sensorValueView = new TextView(getContext());
             linearLayout.addView(sensorValueView);
-            linearLayout.setOnClickListener(new SensorDetailsClickListener(sensor, inflater));
+            linearLayout.setOnClickListener(new SensorDetailsClickListener(sensor, sensorDetails));
             layout.addView(linearLayout);
             sensorValuesMap.put(sensor, sensorValueView);
         }
@@ -203,6 +187,23 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
 
     }
 
+    private static String findNearest(Map<String, Float> map, float value) {
+        float absValue = Math.abs(value);
+        String name = null;
+        float minDelta = Float.MAX_VALUE;
+        for (Map.Entry<String, Float> entry : map.entrySet()) {
+            float delta = Math.abs(entry.getValue() - absValue);
+            if (delta < minDelta) {
+                minDelta = delta;
+                name = entry.getKey();
+            }
+        }
+        if (name == null) {
+            return null;
+        }
+        return name;
+    }
+
     @SuppressWarnings("deprecation")
     private String getUnit(int sensorType) {
         switch (sensorType) {
@@ -239,17 +240,15 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
     private class SensorDetailsClickListener implements View.OnClickListener {
 
         private Sensor sensor;
-        private LayoutInflater inflater;
+        private ViewGroup viewGroup;
 
-        SensorDetailsClickListener(Sensor sensor, LayoutInflater inflater) {
+        SensorDetailsClickListener(Sensor sensor, ViewGroup sensorDetails) {
             this.sensor = sensor;
-            this.inflater = inflater;
+            this.viewGroup = sensorDetails;
         }
 
         @Override
         public void onClick(View v) {
-            View viewGroup = inflater.inflate(R.layout.sensor_details, null);
-
             String sensorType = Utils.findConstant(Sensor.class, sensor.getType(), "TYPE_(.+)");
             String unit = getUnit(sensor.getType());
             TextView view;

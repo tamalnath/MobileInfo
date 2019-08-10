@@ -11,12 +11,15 @@
 
     <string name="menu_home">Home</string>
     <string name="menu_fonts">Fonts</string>
+    <string name="menu_network">Network</string>
     <string name="menu_sensors">Sensors</string>
 
     <string name="font_bold">Bold</string>
     <string name="font_italic">Italic</string>
     <string name="font_sample">The quick brown fox jumps over the lazy dog.</string>
     <string name="input_hints">Please enter something&#8230;</string>
+
+    <string name="network_bandwidth">&#8593; %1$d Mbps, &#8595; %2$d Mbps</string>
 
     <string name="sensor_unit_ms2">m/s&#178;</string>
     <string name="sensor_unit_ut">&#181;T</string>
@@ -54,5 +57,6 @@
     <string name="sensor_dynamic">Is Dynamic</string>
     <string name="sensor_wake_up">Is Wake Up</string>
     <string name="sensor_additional_info">Additional Information</string>
+
 
 </resources>
