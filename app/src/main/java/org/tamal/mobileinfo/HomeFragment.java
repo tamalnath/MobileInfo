@@ -20,6 +20,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,11 +46,25 @@ public class HomeFragment extends AbstractFragment {
         if (activity == null) {
             return view;
         }
+        testAddConstraintLayout();
         requestPermissions(activity);
         addBatteryStatus(activity);
         addResourceDetails();
         addStaticData();
         return view;
+    }
+
+    private void testAddConstraintLayout() {
+        View view = getLayoutInflater().inflate(R.layout.view_key_value, viewGroup);
+        ConstraintLayout layout = (ConstraintLayout) view.findViewById(R.id.key).getParent();
+        ConstraintSet set = new ConstraintSet();
+        set.clone(layout);
+        Map<String, Object> map = new TreeMap<>();
+        map.put("A", "A AB ABC ABCD ABCDE ABCDEF ABCDEFG ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN ABCDEFGHIJKLMNO ABCDEFGHIJKLMNOP");
+        map.put("A AB", "A AB ABC");
+        map.put("A AB ABC ABCD ABCDE ABCDEF ABCDEFG", "ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN ABCDEFGHIJKLMNO ABCDEFGHIJKLMNOP");
+        map.put("A AB ABC ABCD ABCDE ABCDEF ABCDEFG ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN", "ABCDEFGHIJKLMNO");
+        addMap(map);
     }
 
     @Override

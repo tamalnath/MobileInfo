@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,16 +14,22 @@ import android.widget.TextView;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
+import androidx.constraintlayout.widget.Barrier;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractFragment extends Fragment {
 
+    static final String TAG = "AbstractFragment";
     static final String ROOT = "https://developer.android.com/reference/";
     final int id = View.generateViewId();
     ViewGroup viewGroup;
+    private static Field constrainedWidth;
 
     @StringRes
     abstract int getTitle();
@@ -68,6 +75,65 @@ public abstract class AbstractFragment extends Fragment {
         }
         viewGroup.addView(textView);
         return textView;
+    }
+
+    ConstraintLayout addMap(Map<?, ?> map) {
+        ConstraintLayout layout = new ConstraintLayout(getContext());
+        ConstraintSet set = new ConstraintSet();
+        set.clone(layout);
+        int barrierId = View.NO_ID;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            TextView key = buildTextView(set);
+            key.setText(Utils.toString(entry.getKey()));
+            key.setTypeface(Typeface.DEFAULT_BOLD);
+            layout.addView(key);
+            set.connect(key.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            if (barrierId == View.NO_ID) {
+                set.connect(key.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            } else {
+                set.connect(key.getId(), ConstraintSet.TOP, barrierId, ConstraintSet.BOTTOM);
+            }
+            TextView value = buildTextView(set);
+            value.setText(Utils.toString(entry.getValue()));
+            value.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
+            layout.addView(value);
+            set.connect(value.getId(), ConstraintSet.START, key.getId(), ConstraintSet.END);
+            set.connect(value.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+            set.connect(value.getId(), ConstraintSet.BASELINE, key.getId(), ConstraintSet.BASELINE);
+            set.setHorizontalBias(value.getId(), 1.0f);
+            constrainWidth(set, value.getId());
+
+            barrierId = View.generateViewId();
+            set.createBarrier(barrierId, Barrier.BOTTOM, key.getId(), value.getId());
+        }
+        set.applyTo(layout);
+        viewGroup.addView(layout);
+        return layout;
+    }
+
+    private TextView buildTextView(ConstraintSet set) {
+        TextView textView = new TextView(getContext());
+        int id = View.generateViewId();
+        textView.setId(id);
+        textView.setTextIsSelectable(true);
+        set.constrainHeight(id, ConstraintSet.WRAP_CONTENT);
+        set.constrainWidth(id, ConstraintSet.WRAP_CONTENT);
+        return textView;
+    }
+
+    private void constrainWidth(ConstraintSet set, int viewId) {
+        Object constraint = set.getParameters(viewId);
+        try {
+            if (constrainedWidth == null) {
+                Object object = set.getParameters(viewId);
+                constrainedWidth = object.getClass().getField("constrainedWidth");
+                constrainedWidth.setAccessible(true);
+            }
+            constrainedWidth.setBoolean(constraint, true);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            Log.e(TAG, e.toString());
+        }
+
     }
 
     Map<String, TextView> addKeyValues(Map<String, ?> map) {
