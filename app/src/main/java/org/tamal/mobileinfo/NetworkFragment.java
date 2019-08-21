@@ -13,12 +13,10 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,23 +27,24 @@ public class NetworkFragment extends AbstractFragment {
     private static final String BANDWIDTH = "Bandwidth";
     private static final String NET_TRANSPORT = "Network Transport";
     private static final String NET_CAPABILITIES = "Network Capabilities";
+    private static final String NET_STATE = "Network State";
     private ConnectivityManager connectivityManager;
     private NetworkCallback callback = new NetworkCallback();
-    private TextView networkState;
-    private Map<String, TextView> networkInfo;
-    private Map<String, TextView> networkCapabilities;
-    private Map<String, TextView> linkProperties;
+    private KeyValues networkState = new KeyValues();
+    private KeyValues networkInfo = new KeyValues();
+    private KeyValues networkCapabilities = new KeyValues();
+    private KeyValues linkProperties = new KeyValues();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
-        networkState = addKeyValue("Network State", "Unavailable");
+        networkState.set(Collections.singletonMap(NET_STATE, "Unavailable"));
         addHeader(NetworkInfo.class);
-        networkInfo = buildKeyValues(Utils.findProperties(NetworkInfo.class).keySet());
+        networkInfo.set(null);
         addHeader(NetworkCapabilities.class);
-        networkCapabilities = buildKeyValues(Arrays.asList(BANDWIDTH, NET_CAPABILITIES, NET_TRANSPORT));
+        networkCapabilities.set(null);
         addHeader(LinkProperties.class);
-        linkProperties = buildKeyValues(Utils.findProperties(LinkProperties.class).keySet());
+        linkProperties.set(null);
         final Context context = getContext();
         if (context == null) {
             return view;
@@ -59,33 +58,18 @@ public class NetworkFragment extends AbstractFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        connectivityManager.unregisterNetworkCallback(callback);
-    }
-
-    private Map<String, TextView> buildKeyValues(Collection<String> keys) {
-        Map<String, String> map = new TreeMap<>();
-        for (String key : keys) {
-            map.put(key, "");
-        }
-        return addKeyValues(map);
+         connectivityManager.unregisterNetworkCallback(callback);
     }
 
     private void updateNetworkDetails(Network network, String state) {
-        networkState.setText(state);
+        networkState.set(Collections.singletonMap(NET_STATE, state));
         if (network == null || state.equals("Lost")) {
-            for (TextView textView : networkInfo.values()) {
-                textView.setText("");
-            }
-            for (TextView textView : networkCapabilities.values()) {
-                textView.setText("");
-            }
-            for (TextView textView : linkProperties.values()) {
-                textView.setText("");
-            }
+            networkInfo.set(null);
+            networkCapabilities.set(null);
+            linkProperties.set(null);
             return;
         }
-        Map<String, Object> info = Utils.findProperties(connectivityManager.getNetworkInfo(network));
-        updateKeyValues(info, networkInfo);
+        networkInfo.set(Utils.findProperties(connectivityManager.getNetworkInfo(network)));
         Map<String, String> capabilities = new TreeMap<>();
         NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
         if (networkCapabilities != null) {
@@ -104,15 +88,9 @@ public class NetworkFragment extends AbstractFragment {
                 }
             }
             capabilities.put(NET_CAPABILITIES, capability.substring(1));
-            if (this.networkCapabilities == null) {
-                addHeader(NetworkCapabilities.class);
-                this.networkCapabilities = addKeyValues(capabilities);
-            } else {
-                updateKeyValues(capabilities, this.networkCapabilities);
-            }
+            this.networkCapabilities.set(capabilities);
         }
-        Map<String, Object> link = Utils.findProperties(connectivityManager.getLinkProperties(network));
-        updateKeyValues(link, linkProperties);
+        linkProperties.set(Utils.findProperties(connectivityManager.getLinkProperties(network)));
     }
 
     private class NetworkCallback extends ConnectivityManager.NetworkCallback {

@@ -48,7 +48,7 @@
         app:layout_constraintTop_toBottomOf="@id/bold" />
 
     <include
-        layout="@layout/nested_scroll_view"
+        layout="@layout/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/default_margin"

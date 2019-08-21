@@ -44,7 +44,7 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.nested_scroll_view, container, false);
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.nested_scroll_view, container, false);
         Activity activity = getActivity();
         if (activity == null) {
             return rootView;
@@ -57,8 +57,8 @@ public class SensorsFragment extends AbstractFragment implements SensorEventList
                 return s1.getStringType().compareTo(s2.getStringType());
             }
         });
-        ViewGroup layout = rootView.findViewById(R.id.id_linear_layout);
-        ViewGroup sensorDetails = (ViewGroup) inflater.inflate(R.layout.sensor_details, viewGroup, false);
+        LinearLayout layout = rootView.findViewById(R.id.linear_layout);
+        ViewGroup sensorDetails = (ViewGroup) inflater.inflate(R.layout.sensor_details, rootView, false);
         for (Sensor sensor : sensors) {
             LinearLayout linearLayout = new LinearLayout(getContext());
             linearLayout.setOrientation(LinearLayout.VERTICAL);

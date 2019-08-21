@@ -16,9 +16,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,7 +30,7 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
     private SeekBar size;
     private EditText sampleText;
     private Map<String, Typeface> fonts;
-    private Map<String, TextView> textViews = new HashMap<>();
+    private KeyValues keyValues = new FontKeyValues();
 
     @SuppressWarnings("unchecked")
     public FontsFragment() {
@@ -47,7 +48,12 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ConstraintLayout layout = (ConstraintLayout) inflater.inflate(R.layout.fragment_fonts, container, false);
-        viewGroup = layout.findViewById(R.id.id_linear_layout);
+        RecyclerView recyclerView = layout.findViewById(R.id.recycler_view);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new Adapter();
+        recyclerView.setAdapter(adapter);
+
         bold = layout.findViewById(R.id.bold);
         italic = layout.findViewById(R.id.italic);
         size = layout.findViewById(R.id.size);
@@ -56,15 +62,7 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
         italic.setOnCheckedChangeListener(this);
         size.setOnSeekBarChangeListener(this);
         sampleText.addTextChangedListener(this);
-        final int style = getStyle();
-        for (final Map.Entry<String, Typeface> entry : fonts.entrySet()) {
-            final Typeface typeface = entry.getValue();
-            TextView textView = addKeyValue(entry.getKey(), sampleText.getText());
-            textView.setTypeface(typeface, style);
-            textView.setTextSize(size.getProgress() + 8);
-            textView.setOnClickListener(this);
-            textViews.put(entry.getKey(), textView);
-        }
+        keyValues.set(fonts);
         return layout;
     }
 
@@ -76,9 +74,7 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        for (Map.Entry<String, TextView> entry : textViews.entrySet()) {
-            entry.getValue().setTypeface(fonts.get(entry.getKey()), getStyle());
-        }
+        keyValues.set(fonts);
     }
 
     @Override
@@ -93,9 +89,7 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        for (TextView textView : textViews.values()) {
-            textView.setTextSize(size.getProgress() + 8);
-        }
+        keyValues.set(fonts);
     }
 
     @Override
@@ -105,9 +99,7 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        for (TextView textView : textViews.values()) {
-            textView.setText(sampleText.getText());
-        }
+        keyValues.set(fonts);
     }
 
     @Override
@@ -131,4 +123,16 @@ public class FontsFragment extends AbstractFragment implements CompoundButton.On
         return R.drawable.ic_text;
     }
 
+    class FontKeyValues extends KeyValues {
+
+        @Override
+        void decorate(Object key, Object value, TextView keyView, TextView valueView) {
+            keyView.setText(Utils.toString(key));
+            valueView.setText(sampleText.getText());
+            valueView.setTypeface((Typeface) value, getStyle());
+            valueView.setTextSize(size.getProgress() + 8);
+            valueView.setOnClickListener(FontsFragment.this);
+        }
+
+    }
 }

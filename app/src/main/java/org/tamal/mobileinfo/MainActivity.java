@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         menu = navigationView.getMenu();
         for (AbstractFragment fragment : fragments) {
-            MenuItem menuItem = menu.add(R.id.menu_group, fragment.id, Menu.NONE, fragment.getTitle());
+            MenuItem menuItem = menu.add(R.id.menu_group, fragment.hashCode(), Menu.NONE, fragment.getTitle());
             menuItem.setIcon(fragment.getIcon());
             menuItem.setCheckable(true);
         }
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         for (int i = 0; i < fragments.length; i++) {
-            if (item.getItemId() == fragments[i].id) {
+            if (item.getItemId() == fragments[i].hashCode()) {
                 viewPager.setCurrentItem(i);
                 break;
             }

@@ -16,17 +16,13 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 
 public class HomeFragment extends AbstractFragment {
@@ -35,9 +31,14 @@ public class HomeFragment extends AbstractFragment {
     private static final String DENIED = "DENIED";
     private boolean requested;
     private int REQUEST_CODE;
-    private Map<String, TextView> permissionMap;
-    private Map<String, TextView> batteryMap;
-    private Map<String, TextView> configMap;
+    private KeyValues permissionMap = new KeyValues();
+    private KeyValues battery = new KeyValues();
+    private KeyValues configuration = new KeyValues();
+    private KeyValues displayMetrics = new KeyValues();
+    private KeyValues buildMap = new KeyValues();
+    private KeyValues versionMap = new KeyValues();
+    private KeyValues envMap = new KeyValues();
+    private KeyValues sysPropMap = new KeyValues();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -46,7 +47,6 @@ public class HomeFragment extends AbstractFragment {
         if (activity == null) {
             return view;
         }
-        testAddConstraintLayout();
         requestPermissions(activity);
         addBatteryStatus(activity);
         addResourceDetails();
@@ -54,24 +54,10 @@ public class HomeFragment extends AbstractFragment {
         return view;
     }
 
-    private void testAddConstraintLayout() {
-        View view = getLayoutInflater().inflate(R.layout.view_key_value, viewGroup);
-        ConstraintLayout layout = (ConstraintLayout) view.findViewById(R.id.key).getParent();
-        ConstraintSet set = new ConstraintSet();
-        set.clone(layout);
-        Map<String, Object> map = new TreeMap<>();
-        map.put("A", "A AB ABC ABCD ABCDE ABCDEF ABCDEFG ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN ABCDEFGHIJKLMNO ABCDEFGHIJKLMNOP");
-        map.put("A AB", "A AB ABC");
-        map.put("A AB ABC ABCD ABCDE ABCDEF ABCDEFG", "ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN ABCDEFGHIJKLMNO ABCDEFGHIJKLMNOP");
-        map.put("A AB ABC ABCD ABCDE ABCDEF ABCDEFG ABCDEFGH ABCDEFGHI ABCDEFGHIJ ABCDEFGHIJK ABCDEFGHIJKL ABCDEFGHIJKLM ABCDEFGHIJKLMN", "ABCDEFGHIJKLMNO");
-        addMap(map);
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Map<String, Object> map = getConfiguration(newConfig);
-        updateKeyValues(map, configMap);
+        configuration.set(getConfiguration(newConfig));
     }
 
     private void requestPermissions(Activity activity) {
@@ -98,7 +84,7 @@ public class HomeFragment extends AbstractFragment {
             permission = split[split.length - 1];
             map.put(permission, grant);
         }
-        permissionMap = addKeyValues(map);
+        permissionMap.set(map);
         if (!(deniedPermissions.isEmpty() || requested)) {
             String[] denied = deniedPermissions.toArray(new String[0]);
             REQUEST_CODE = this.getId() & 0xFFFF;
@@ -115,6 +101,7 @@ public class HomeFragment extends AbstractFragment {
             return;
         }
         List<String> deniedPermissions = new ArrayList<>();
+        Map<String, String> map = new TreeMap<>();
         for (int i = 0; i <= permissions.length; i++) {
             String[] split = permissions[i].split("\\.");
             String permission = split[split.length - 1];
@@ -123,11 +110,9 @@ public class HomeFragment extends AbstractFragment {
                 grant = DENIED;
                 deniedPermissions.add(permission);
             }
-            TextView textView = permissionMap.get(permission);
-            if (textView != null) {
-                textView.setText(grant);
-            }
+            map.put(permission, grant);
         }
+        permissionMap.set(map);
         String message = getString(R.string.permission_denied, Utils.toString(deniedPermissions, ", ", null, null, null));
         Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
     }
@@ -135,8 +120,7 @@ public class HomeFragment extends AbstractFragment {
     private void addBatteryStatus(Context context) {
         addHeader(BatteryManager.class);
 
-        Map<String, Object> map = fetchBatteryStatus(context);
-        batteryMap = addKeyValues(map);
+        battery.set(fetchBatteryStatus(context));
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_BATTERY_LOW);
@@ -146,8 +130,7 @@ public class HomeFragment extends AbstractFragment {
         context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Map<String, Object> map = fetchBatteryStatus(context);
-                updateKeyValues(map, batteryMap);
+                battery.set(fetchBatteryStatus(context));
             }
         }, intentFilter);
     }
@@ -205,11 +188,10 @@ public class HomeFragment extends AbstractFragment {
 
     private void addResourceDetails() {
         Resources resources = getResources();
-        Map<String, Object> map = getConfiguration(resources.getConfiguration());
         addHeader(Configuration.class);
-        configMap = addKeyValues(map);
+        configuration.set(getConfiguration(resources.getConfiguration()));
         addHeader(DisplayMetrics.class);
-        addKeyValues(Utils.findFields(resources.getDisplayMetrics()));
+        displayMetrics.set(Utils.findFields(resources.getDisplayMetrics()));
     }
 
     private Map<String, Object> getConfiguration(Configuration configuration) {
@@ -249,23 +231,17 @@ public class HomeFragment extends AbstractFragment {
 
     private void addStaticData() {
         addHeader(Build.class);
-        Map<String, Object> build = Utils.findConstants(Build.class, null, null);
-        addKeyValues(build);
+        buildMap.set(Utils.findConstants(Build.class, null, null));
         addHeader(Build.VERSION.class);
         Map<String, Object> VERSION = Utils.findConstants(Build.VERSION.class, null, null);
-        addKeyValues(VERSION);
         String versionCode = Utils.findConstant(Build.VERSION_CODES.class, Build.VERSION.SDK_INT, null);
-        addKeyValue("Version Code", versionCode);
+        VERSION.put("Version Code", versionCode);
+        versionMap.set(VERSION);
 
         addHeader("Environment Variables", ROOT + "java/lang/System.html#getenv()");
-        addKeyValues(System.getenv());
+        envMap.set(System.getenv());
         addHeader("System Properties", ROOT + "java/lang/System.html#getProperties()");
-        Properties properties = System.getProperties();
-        Map<String, String> map = new TreeMap<>();
-        for (String property : properties.stringPropertyNames()) {
-            map.put(property, properties.getProperty(property));
-        }
-        addKeyValues(map);
+        sysPropMap.set(System.getProperties());
     }
 
     @Override
